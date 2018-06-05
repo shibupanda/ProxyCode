@@ -56,22 +56,27 @@ class ProxyThread extends Thread {
 			DataOutputStream appiumSocketOut = new DataOutputStream(appiumSocket.getOutputStream());
 
 			// Lets read from Eclipse Socket and write the request to Appium Socket
-			byte[] buff = new byte[BUFFER_SIZE];
-			int a = 0;
-			while ((a = eclipseClientIn.read(buff)) > -1) {
-				appiumSocketOut.write(buff, 0, a);
-				System.out.print(">>> " + new String(buff, StandardCharsets.UTF_8));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(eclipseClientIn));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				appiumSocketOut.writeChars(line);
+				System.out.println(">>> " + line);
+
+				if (line.isEmpty())
+					break;
 			}
 			appiumSocketOut.flush();
+			System.out.println("Reading completed. Now Writing");
 
 			// Lets Read from AppiumSocket and Write the response to EclipseStream
 			byte[] buffer = new byte[BUFFER_SIZE];
 			int b = 0;
 			while ((b = appiumSocketIn.read(buffer)) > -1) {
 				eclipseClientOut.write(buffer, 0, b);
-				System.out.print("<<< " + new String(buff, StandardCharsets.UTF_8));
+				System.out.println("<<< " + new String(buffer, StandardCharsets.UTF_8));
 			}
 			eclipseClientOut.flush();
+			System.out.println();
 
 		} catch (IOException ex) {
 			Logger.getLogger(ProxyThread.class.getName()).log(Level.SEVERE, null, ex);
