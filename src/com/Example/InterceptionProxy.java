@@ -62,7 +62,7 @@ class ProxyThread extends Thread {
 				appiumSocketOut.write(line.getBytes(StandardCharsets.UTF_8));
 				System.out.println(">>> " + line);
 
-				if (line.isEmpty())
+				if (line.contentEquals("\r\n\r\n"))
 					break;
 			}
 			appiumSocketOut.flush();
