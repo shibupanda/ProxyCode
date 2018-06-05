@@ -45,35 +45,39 @@ class ProxyThread extends Thread {
 
 	public void run() {
 
-		DataInputStream eclipseClientIn;
-		DataOutputStream eclipseClientOut = null;
+		InputStream eclipseClientIn;
+		OutputStream eclipseClientOut = null;
 		try {
 
-			eclipseClientIn = new DataInputStream(eclipseSocket.getInputStream());
-			eclipseClientOut = new DataOutputStream(eclipseSocket.getOutputStream());
+			eclipseClientIn = eclipseSocket.getInputStream();
+			eclipseClientOut = eclipseSocket.getOutputStream();
 
-			DataInputStream appiumSocketIn = new DataInputStream(appiumSocket.getInputStream());
-			DataOutputStream appiumSocketOut = new DataOutputStream(appiumSocket.getOutputStream());
+			InputStream appiumSocketIn = appiumSocket.getInputStream();
+			OutputStream appiumSocketOut = appiumSocket.getOutputStream();
 
 			// Lets read from Eclipse Socket and write the request to Appium Socket
 			BufferedReader reader = new BufferedReader(new InputStreamReader(eclipseClientIn));
 			String line;
 			while ((line = reader.readLine()) != null) {
-				appiumSocketOut.writeChars(line);
+				appiumSocketOut.write(line.getBytes(StandardCharsets.UTF_8));
 				System.out.println(">>> " + line);
 
 				if (line.isEmpty())
 					break;
 			}
 			appiumSocketOut.flush();
+
 			System.out.println("Reading completed. Now Writing");
 
 			// Lets Read from AppiumSocket and Write the response to EclipseStream
 			byte[] buffer = new byte[BUFFER_SIZE];
 			int b = 0;
 			while ((b = appiumSocketIn.read(buffer)) > -1) {
+				System.out.println("########Executed#############");
 				eclipseClientOut.write(buffer, 0, b);
+
 				System.out.println("<<< " + new String(buffer, StandardCharsets.UTF_8));
+
 			}
 			eclipseClientOut.flush();
 			System.out.println();
