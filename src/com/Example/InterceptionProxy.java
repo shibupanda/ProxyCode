@@ -25,7 +25,6 @@ public class InterceptionProxy {
 
 		while (listening) {
 			new ProxyThread(serverSocket.accept(), appiumSocket).start();
-			new ProxyThread2(serverSocket.accept(), appiumSocket).start();
 		}
 		serverSocket.close();
 	}
@@ -64,18 +63,20 @@ class ProxyThread extends Thread {
 				System.out.print(">>> " + new String(buff, StandardCharsets.UTF_8));
 			}
 			appiumSocketOut.flush();
+			
+//			appiumSocketOut.close();
 
-//			System.out.println("Flushed -----------");
-//			// Lets Read from AppiumSocket and Write the response to EclipseStream
-//			byte[] buffer = new byte[BUFFER_SIZE];
-//			int b = 0;
-//			while ((b = appiumSocketIn.read(buffer)) > -1) {
-//				System.out.println("########Executed#############");
-//				eclipseClientOut.write(buffer, 0, b);
-//				
-//				System.out.print("<<< " + new String(buff, StandardCharsets.UTF_8));
-//			}
-//			eclipseClientOut.flush();
+			System.out.println("Flushed -----------");
+			// Lets Read from AppiumSocket and Write the response to EclipseStream
+			byte[] buffer = new byte[BUFFER_SIZE];
+			int b = 0;
+			while ((b = appiumSocketIn.read(buffer)) > -1) {
+				System.out.println("########Executed#############");
+				eclipseClientOut.write(buffer, 0, b);
+				
+				System.out.print("<<< " + new String(buff, StandardCharsets.UTF_8));
+			}
+			eclipseClientOut.flush();
 
 		} catch (IOException ex) {
 			Logger.getLogger(ProxyThread.class.getName()).log(Level.SEVERE, null, ex);
@@ -122,65 +123,6 @@ class ProxyThread extends Thread {
 
 }
 
-class ProxyThread2 extends Thread
-{
-	private Socket eclipseSocket = null;
-	private Socket appiumSocket = null;
-
-	private static final int BUFFER_SIZE = 1024;
-
-	public ProxyThread2(Socket eclipseSocket, Socket appiumSocket) {
-		super("ProxyThread");
-		this.eclipseSocket = eclipseSocket;
-		this.appiumSocket = appiumSocket;
-	}
-
-	public void run() {
-
-		InputStream eclipseClientIn;
-		OutputStream eclipseClientOut = null;
-		try {
-
-			eclipseClientIn = eclipseSocket.getInputStream();
-			eclipseClientOut = eclipseSocket.getOutputStream();
-
-			InputStream appiumSocketIn = appiumSocket.getInputStream();
-			OutputStream appiumSocketOut = appiumSocket.getOutputStream();
-
-			// Lets read from Eclipse Socket and write the request to Appium Socket
-//			byte[] buff = new byte[BUFFER_SIZE];
-//			int a = 0;
-//			while ((a = eclipseClientIn.read(buff)) > -1) {
-//				appiumSocketOut.write(buff, 0, a);
-//				System.out.print(">>> " + new String(buff, StandardCharsets.UTF_8));
-//			}
-//			appiumSocketOut.flush();
-
-			System.out.println("Flushed -----------");
-			// Lets Read from AppiumSocket and Write the response to EclipseStream
-			byte[] buffer = new byte[BUFFER_SIZE];
-			int b = 0;
-			while ((b = appiumSocketIn.read(buffer)) > -1) {
-				System.out.println("########Executed#############");
-				eclipseClientOut.write(buffer, 0, b);
-				
-				System.out.print("<<< " + new String(buffer, StandardCharsets.UTF_8));
-			}
-			eclipseClientOut.flush();
-
-		} catch (IOException ex) {
-			Logger.getLogger(ProxyThread.class.getName()).log(Level.SEVERE, null, ex);
-
-		} finally {
-			try {
-				appiumSocket.close();
-				eclipseSocket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-}
 
 
 
