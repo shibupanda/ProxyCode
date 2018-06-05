@@ -1,8 +1,12 @@
 package com.Example;
 
-import java.net.*;
-import java.io.*;
-import java.nio.CharBuffer;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,9 +25,10 @@ public class InterceptionProxy {
 			System.exit(-1);
 		}
 
-		Socket appiumSocket = new Socket("127.0.0.1", 4723);
+		
 
 		while (listening) {
+			Socket appiumSocket = new Socket("127.0.0.1", 4723);
 			new ProxyThread(serverSocket.accept(), appiumSocket).start();
 		}
 		serverSocket.close();
@@ -35,7 +40,7 @@ class ProxyThread extends Thread {
 	private Socket eclipseSocket = null;
 	private Socket appiumSocket = null;
 
-	private static final int BUFFER_SIZE = 1024;
+	public static final int BUFFER_SIZE = 1024;
 
 	public ProxyThread(Socket eclipseSocket, Socket appiumSocket) {
 		super("ProxyThread");
@@ -56,71 +61,19 @@ class ProxyThread extends Thread {
 			OutputStream appiumSocketOut = appiumSocket.getOutputStream();
 
 			// Lets read from Eclipse Socket and write the request to Appium Socket
-			
-			int contentLength = 0;
-			
-			byte[] buff = new byte[BUFFER_SIZE];
-			int a = 0;
-			while ((a = eclipseClientIn.read(buff)) > -1) {
-				appiumSocketOut.write(buff, 0, a);
-				String line = new String(buff, StandardCharsets.UTF_8);
-				System.out.println(">>> " + line);
-				
-				
-				if (line.startsWith("Content-Length: "))
-					contentLength = Integer.parseInt(line.split("Content-Length: ")[1]);
-				
-				if (line.isEmpty())
-					break;
-			}
-			
-			
-			
-			// // read Headers
-			// while ((line = reader.readLine()) != null) {
-			// System.out.println(">>> " + line);
-			//
-			// byte[] lineBytes = line.getBytes(StandardCharsets.UTF_8);
-			// appiumSocketOut.write(lineBytes, 0, lineBytes.length);
-			//
-			// if (line.startsWith("Content-Length: "))
-			// contentLength = Integer.parseInt(line.split("Content-Length: ")[1]);
-			//
-			// if (line.isEmpty())
-			// break;
-			//
-			//
-			// }
-
-			// Now read Body
-			while (contentLength > 0) {
-				System.out.println("Remaining Content-Length: " + contentLength);
-				byte[] buffer = new byte[BUFFER_SIZE];
-
-				int readLength = eclipseClientIn.read(buffer);
-				appiumSocketOut.write(buffer, 0, readLength);
-				contentLength -= readLength;
-
-			}
-
-			appiumSocketOut.flush();
-
-			System.out.println("Reading completed. Now Writing");
+			EclipseToAppiumThread e2a = new EclipseToAppiumThread(eclipseClientIn, appiumSocketOut);
+			Thread t1 = new Thread(e2a);
+			t1.start();
 
 			// Lets Read from AppiumSocket and Write the response to EclipseStream
-			byte[] buffer = new byte[BUFFER_SIZE];
-			int b = 0;
-			while ((b = appiumSocketIn.read(buffer)) > -1) {
-				System.out.println("########Executed#############");
-				eclipseClientOut.write(buffer, 0, b);
+			AppiumToEclipseThread a2e = new AppiumToEclipseThread(appiumSocketIn, eclipseClientOut);
+			Thread t2 = new Thread(a2e);
+			t2.start();
 
-				System.out.println("<<< " + new String(buffer, StandardCharsets.UTF_8));
-
-			}
-			eclipseClientOut.flush();
-			System.out.println();
-
-		} catch (IOException ex) {
+			t1.join();
+			t2.join();
+			
+		} catch (IOException | InterruptedException ex) {
 			Logger.getLogger(ProxyThread.class.getName()).log(Level.SEVERE, null, ex);
 
 		} finally {
