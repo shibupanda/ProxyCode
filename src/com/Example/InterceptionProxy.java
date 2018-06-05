@@ -40,7 +40,7 @@ class ProxyThread extends Thread {
 	private Socket eclipseSocket = null;
 	private Socket appiumSocket = null;
 
-	public static final int BUFFER_SIZE = 1024;
+	public static final int BUFFER_SIZE = 100;
 
 	public ProxyThread(Socket eclipseSocket, Socket appiumSocket) {
 		super("ProxyThread");
