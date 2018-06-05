@@ -61,15 +61,18 @@ class ProxyThread extends Thread {
 			int contentLength = 0;
 			// read Headers
 			while ((line = reader.readLine()) != null) {
-				appiumSocketOut.write(line.getBytes(StandardCharsets.UTF_8));
 				System.out.println(">>> " + line);
+				
+				byte[] lineBytes = line.getBytes(StandardCharsets.UTF_8);
+				appiumSocketOut.write(lineBytes, 0, lineBytes.length);
+								
 				if (line.startsWith("Content-Length: "))
 					contentLength = Integer.parseInt(line.split("Content-Length: ")[1]);
 
 				if (line.isEmpty())
 					break;
 			}
-			
+
 			// Now read Body
 			while (contentLength > 0) {
 				System.out.println("Remaining Content-Length: " + contentLength);
