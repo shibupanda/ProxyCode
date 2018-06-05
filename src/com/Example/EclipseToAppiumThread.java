@@ -31,7 +31,7 @@ public class EclipseToAppiumThread implements Runnable {
 
 				String bytesToString = new String(buffer, StandardCharsets.UTF_8);
 
-				System.out.println(">>" + bytesToString);
+				System.out.print(bytesToString);
 				sb.append(bytesToString);
 
 				appiumOut.write(buffer, 0, bytesRead);

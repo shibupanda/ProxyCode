@@ -29,13 +29,13 @@ public class AppiumToEclipseThread implements Runnable {
 
 				String bytesToString = new String(buffer, StandardCharsets.UTF_8);
 
-				System.out.println("<<" + bytesToString);
+				System.err.print("<<" + bytesToString);
 				sb.append(bytesToString);
 
 				eclipseOut.write(buffer, 0, bytesRead);
 
 			}
-			System.out.println();
+			System.err.println();
 			// System.out.println("<<" + sb.toString());
 			eclipseOut.flush();
 
