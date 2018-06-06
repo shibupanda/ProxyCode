@@ -8,10 +8,13 @@ import java.io.OutputStream;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 
+import com.google.gson.Gson;
+
 public class AppiumToEclipseThread implements Runnable {
 
 	InputStream appiumIn;
 	OutputStream eclipseOut;
+	private Gson gson = new Gson();
 
 	public AppiumToEclipseThread(InputStream appiumIn, OutputStream eclipseOut) {
 		this.appiumIn = appiumIn;
@@ -23,6 +26,7 @@ public class AppiumToEclipseThread implements Runnable {
 		try {
 			// Lets read from Eclipse Socket and write the request to Appium Socket
 			StringBuffer sb = new StringBuffer();
+			StringBuffer sb1 = new StringBuffer();
 			String line = null;
 			BufferedReader br = new BufferedReader(new InputStreamReader(appiumIn, StandardCharsets.UTF_8));
 
@@ -32,7 +36,7 @@ public class AppiumToEclipseThread implements Runnable {
 
 				byte[] lineBytes = (line + "\r\n").getBytes(StandardCharsets.UTF_8);
 				System.err.println("  <<  " + line);
-				// eclipseOut.write(lineBytes);
+				 eclipseOut.write(lineBytes);
 				if (line.isEmpty())
 					break;
 			}
@@ -44,18 +48,31 @@ public class AppiumToEclipseThread implements Runnable {
 			while (true) {
 				CharBuffer buffer = CharBuffer.allocate(ProxyThread.BUFFER_SIZE);
 				int bytesRead = br.read(buffer);
+				int i=0;
+				
 
 				String bytesToString = new String(buffer.array());
 
 				System.err.println("  <<  " + bytesToString);
+				sb1.append(bytesToString);
 				sb.append(bytesToString);
+				
+				
+				
+				
+//				AppiumResponseDTO dto = gson.fromJson(sb1.toString(), AppiumResponseDTO.class);
+//				System.out.println("$$$$$$$$$"+dto.sessionId);
 
-				// eclipseOut.write(bytesToString.getBytes(StandardCharsets.UTF_8), 0, bytesRead);
+				 eclipseOut.write(bytesToString.getBytes(StandardCharsets.UTF_8), 0, bytesRead);
 
 				if (bytesRead < ProxyThread.BUFFER_SIZE)
 					break;
 			}
-
+			int indexLast = sb1.toString().lastIndexOf('}');
+//			System.out.println("##########"+sb1.toString().substring(0, indexLast+1)+"################");
+//			System.out.println("&&&&&&&&&&&&&&&&&&&&&");
+			AppiumResponseDTO dto = gson.fromJson(sb1.toString().substring(0, indexLast+1), AppiumResponseDTO.class);
+			System.out.println("SessionId: "+dto.sessionId);
 			System.err.println("AppiumToEclipseThread completed.");
 			System.err.println();
 		} catch (IOException e) {
