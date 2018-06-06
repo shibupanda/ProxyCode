@@ -25,8 +25,6 @@ public class InterceptionProxy {
 			System.exit(-1);
 		}
 
-		
-
 		while (listening) {
 			Socket appiumSocket = new Socket("127.0.0.1", 4723);
 			new ProxyThread(serverSocket.accept(), appiumSocket).start();
@@ -43,13 +41,13 @@ class ProxyThread extends Thread {
 	public static final int BUFFER_SIZE = 100;
 
 	public ProxyThread(Socket eclipseSocket, Socket appiumSocket) {
-		super("ProxyThread");
 		this.eclipseSocket = eclipseSocket;
 		this.appiumSocket = appiumSocket;
+
 	}
 
 	public void run() {
-
+		System.out.println("=================== New Thread started ===============" + Thread.currentThread().getName());
 		InputStream eclipseClientIn;
 		OutputStream eclipseClientOut = null;
 		try {
@@ -72,14 +70,15 @@ class ProxyThread extends Thread {
 
 			t1.join();
 			t2.join();
-			
+
 		} catch (IOException | InterruptedException ex) {
 			Logger.getLogger(ProxyThread.class.getName()).log(Level.SEVERE, null, ex);
 
 		} finally {
 			try {
-				appiumSocket.close();
+				System.out.println("Closing sockets");
 				eclipseSocket.close();
+				appiumSocket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

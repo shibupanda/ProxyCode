@@ -32,7 +32,7 @@ public class AppiumToEclipseThread implements Runnable {
 
 				byte[] lineBytes = (line + "\r\n").getBytes(StandardCharsets.UTF_8);
 				System.err.println("  <<  " + line);
-				eclipseOut.write(lineBytes);
+				// eclipseOut.write(lineBytes);
 				if (line.isEmpty())
 					break;
 			}
@@ -50,7 +50,7 @@ public class AppiumToEclipseThread implements Runnable {
 				System.err.println("  <<  " + bytesToString);
 				sb.append(bytesToString);
 
-				eclipseOut.write(bytesToString.getBytes(StandardCharsets.UTF_8), 0, bytesRead);
+				// eclipseOut.write(bytesToString.getBytes(StandardCharsets.UTF_8), 0, bytesRead);
 
 				if (bytesRead < ProxyThread.BUFFER_SIZE)
 					break;
